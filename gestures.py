@@ -100,3 +100,12 @@ class GestureStates:
     def dislike_video(self):
         with self.lock:
             pyautogui.hotkey('shift', '-')
+
+    def skip(self, seconds):
+        with self.lock:
+            if seconds > 0:
+                num_skips = seconds // 5
+                pyautogui.press('right', presses=num_skips)
+            else:
+                num_skips = -seconds // 5
+                pyautogui.press('left', presses=num_skips)

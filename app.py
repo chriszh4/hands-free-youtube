@@ -37,9 +37,30 @@ def on_text(recognizer, audio):
             gesture_states.like_video()
         elif text == "dislike the video":
             gesture_states.dislike_video()
-        else:
-            # TODO: implement skip voice feature
-            pass
+        elif len(text.split()) == 4 and text.split()[0] == "go" and text.split()[1] == "forward":
+            if text.split()[3] == "seconds" or text.split()[3] == "second":
+                try:
+                    gesture_states.skip(int(text.split()[2]))
+                except ValueError:
+                    pass
+            elif text.split()[3] == "minutes" or text.split()[3] == "minute":
+                try:
+                    gesture_states.skip(int(text.split()[2]) * 60)
+                except ValueError:
+                    pass
+        elif len(text.split()) == 4 and text.split()[0] == "go" and (text.split()[1] == "backward" or
+                                                                     text.split()[1] == "backwards" or 
+                                                                     text.split()[1] == "back"):
+            if text.split()[3] == "seconds" or text.split()[3] == "second":
+                try:
+                    gesture_states.skip(-int(text.split()[2]))
+                except ValueError:
+                    pass
+            elif text.split()[3] == "minutes" or text.split()[3] == "minute":
+                try:
+                    gesture_states.skip(-int(text.split()[2]) * 60)
+                except ValueError:
+                    pass
 
     except sr.UnknownValueError:
         pass 
