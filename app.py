@@ -1,10 +1,7 @@
 import cv2
 import mediapipe as mp
 import time
-import pyautogui
-import sounddevice
 import speech_recognition as sr
-import threading
 
 from mediapipe.tasks.python.vision.gesture_recognizer import GestureRecognizer
 from mediapipe.tasks.python.vision.gesture_recognizer import GestureRecognizerOptions
@@ -26,32 +23,6 @@ gesture_recognizer_cw = GestureRecognizer.create_from_options(options)
 
 # Initialize webcam
 cap = cv2.VideoCapture(0)
-"""
-# Launch another thread for speech recognition
-def recognize_speech():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Calibrating microphone... Please remain silent.")
-        recognizer.adjust_for_ambient_noise(source, duration=2)
-        print("Microphone calibrated. Start speaking!")
-
-        try:
-            while True:
-                audio = recognizer.listen(source)
-
-                try:
-                    transcript = recognizer.recognize_google(audio)
-                    print(f"You said: {transcript}")
-                except sr.UnknownValueError:
-                    pass
-                except sr.RequestError as e:
-                    print(f"Could not request results from service; {e}")
-        except KeyboardInterrupt:
-            print("\nExiting.")
-
-speech_thread = threading.Thread(target=recognize_speech)
-speech_thread.start()
-"""
 
 def on_text(recognizer, audio):
     """This is called in a worker thread each time speech is detected."""

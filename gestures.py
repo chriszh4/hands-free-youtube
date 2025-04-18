@@ -1,12 +1,7 @@
 import cv2
-import mediapipe as mp
 import time
 import pyautogui
 import threading
-
-from mediapipe.tasks.python.vision.gesture_recognizer import GestureRecognizer
-from mediapipe.tasks.python.vision.gesture_recognizer import GestureRecognizerOptions
-from mediapipe.tasks.python.vision import RunningMode
 
 class Gesture:
     def __init__(self, key, callback):
