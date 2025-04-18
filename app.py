@@ -2,6 +2,9 @@ import cv2
 import mediapipe as mp
 import time
 import pyautogui
+import sounddevice
+import speech_recognition as sr
+import threading
 
 from mediapipe.tasks.python.vision.gesture_recognizer import GestureRecognizer
 from mediapipe.tasks.python.vision.gesture_recognizer import GestureRecognizerOptions
@@ -18,11 +21,69 @@ options = GestureRecognizerOptions(
     running_mode=RunningMode.VIDEO
 )
 
-recognizer = GestureRecognizer.create_from_options(options)
-recognizer_cw = GestureRecognizer.create_from_options(options)
+gesture_recognizer = GestureRecognizer.create_from_options(options)
+gesture_recognizer_cw = GestureRecognizer.create_from_options(options)
 
 # Initialize webcam
 cap = cv2.VideoCapture(0)
+"""
+# Launch another thread for speech recognition
+def recognize_speech():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Calibrating microphone... Please remain silent.")
+        recognizer.adjust_for_ambient_noise(source, duration=2)
+        print("Microphone calibrated. Start speaking!")
+
+        try:
+            while True:
+                audio = recognizer.listen(source)
+
+                try:
+                    transcript = recognizer.recognize_google(audio)
+                    print(f"You said: {transcript}")
+                except sr.UnknownValueError:
+                    pass
+                except sr.RequestError as e:
+                    print(f"Could not request results from service; {e}")
+        except KeyboardInterrupt:
+            print("\nExiting.")
+
+speech_thread = threading.Thread(target=recognize_speech)
+speech_thread.start()
+"""
+
+def on_text(recognizer, audio):
+    """This is called in a worker thread each time speech is detected."""
+    try:
+        text = recognizer.recognize_google(audio).lower()
+        print(f"Recognized: {text}")
+        if text == "pause the video":
+            gesture_states.pause_video()
+        elif text == "play the video":
+            gesture_states.play_video()
+        elif text == "like the video":
+            gesture_states.like_video()
+        elif text == "dislike the video":
+            gesture_states.dislike_video()
+        else:
+            # TODO: implement skip voice feature
+            pass
+
+    except sr.UnknownValueError:
+        pass 
+    except sr.RequestError as e:
+        print(f"API error: {e}")
+
+r   = sr.Recognizer()
+mic = sr.Microphone()
+
+print("Calibrating mic…")
+with mic as source:
+    r.adjust_for_ambient_noise(source, duration=2)
+
+print("Listening in background.  Ctrl‑C to exit.")
+stop = r.listen_in_background(mic, on_text)
 
 while cap.isOpened():
     success, frame = cap.read()
@@ -40,14 +101,14 @@ while cap.isOpened():
 
     # Send the frame into the recognizer
     timestamp = int(time.time() * 1000)
-    result = recognizer.recognize_for_video(mp.Image(image_format=mp.ImageFormat.SRGB, data=img_rgb), timestamp)
+    result = gesture_recognizer.recognize_for_video(mp.Image(image_format=mp.ImageFormat.SRGB, data=img_rgb), timestamp)
     
     if result.gestures:
         # Assume one gesture for now
         gesture_name = result.gestures[0][0].category_name.lower()
         gesture_states.update_gesture(gesture_name, True)
 
-    result_cw = recognizer_cw.recognize_for_video(mp.Image(image_format=mp.ImageFormat.SRGB, data=img_rgb_rotate_cw), timestamp)
+    result_cw = gesture_recognizer_cw.recognize_for_video(mp.Image(image_format=mp.ImageFormat.SRGB, data=img_rgb_rotate_cw), timestamp)
     
     if result_cw.gestures:
         # Assume one gesture for now
