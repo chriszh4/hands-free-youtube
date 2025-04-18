@@ -12,12 +12,15 @@ class Gesture:
         self.timestamp = None
         self.key = key
         self.callback = callback
+        self.activation_counter = 0
 
 class GestureStates:
     def __init__(self):
-        self.cooldown = 3 #in seconds
+        self.activation_threshold = 5 # Number of positives in a row before activating
+        self.cooldown = 2 #in seconds
         self.in_frame = False
         self.last_in_frame_update = None
+        self.frame_confidence = 0
         self.gestures = {
             'thumb_up': Gesture('thumbs_up', lambda: pyautogui.hotkey('shift', '=')),
             'thumb_down': Gesture('thumbs_down', lambda: pyautogui.hotkey('shift', '-')),
@@ -35,9 +38,18 @@ class GestureStates:
             gesture = self.gestures[gesture_name]
             # Check if enough time has passed since the last update
             if gesture.timestamp is None or (time.time() - gesture.timestamp) > self.cooldown:
-                gesture.timestamp = time.time()
-                print(f"Gesture {gesture_name} {'activated' if active else 'deactivated'} at {gesture.timestamp}")
-                gesture.callback()
+                gesture.activation_counter += 1 
+                # Clear all other counts
+                for g in self.gestures.values():
+                    if g.key != gesture.key:
+                        g.activation_counter = 0
+
+                # Check if the gesture has been activated
+                if gesture.activation_counter >= self.activation_threshold:
+                    print(f"Gesture {gesture_name} {'activated' if active else 'deactivated'} at {gesture.timestamp}")
+                    gesture.activation_counter = 0
+                    gesture.timestamp = time.time()
+                    gesture.callback()
 
     def detect_faces(self, vid):
         # TODO: add time period before toggling (for example gesture blocks face and toggles right now)
@@ -51,10 +63,16 @@ class GestureStates:
             cv2.rectangle(vid, (x, y), (x + w, y + h), (0, 255, 0), 4)
 
         if self.in_frame != (len(faces) > 0):
-            self.in_frame = len(faces) > 0
-            self.last_in_frame_update = time.time()
-            if self.in_frame:
-                print("Face detected!")
+            # Kind of convoluted but positive values are confidence for in frame, negative for out of frame
+            if len(faces)> 0:
+                self.frame_confidence = max(self.frame_confidence + 1, 1)
             else:
-                print("Face not detected!")
-            pyautogui.press("k")
+                self.frame_confidence = min(self.frame_confidence - 1, -1)
+            if abs(self.frame_confidence) >= self.activation_threshold:
+                self.in_frame = len(faces) > 0
+                self.last_in_frame_update = time.time()
+                if self.in_frame:
+                    print("Face detected!")
+                else:
+                    print("Face not detected!")
+                pyautogui.press("k")
