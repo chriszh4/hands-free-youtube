@@ -93,6 +93,11 @@ class GestureStates:
                 self.video_playing = False
                 pyautogui.press("k")
 
+    def toggle_video(self):
+        with self.lock:
+            self.video_playing = not self.video_playing
+            print("Toggled video, now playing" if self.video_playing else "Toggled video, now paused")
+
     def like_video(self):
         with self.lock:
             pyautogui.hotkey('shift', '=')
@@ -109,3 +114,4 @@ class GestureStates:
             else:
                 num_skips = -seconds // 5
                 pyautogui.press('left', presses=num_skips)
+    

@@ -9,7 +9,16 @@ from mediapipe.tasks.python.vision import RunningMode
 
 from gestures import GestureStates
 
+from pynput import keyboard
+
 gesture_states = GestureStates()
+
+def on_press(key):
+    if key == keyboard.Key.space:
+        gesture_states.toggle_video()
+
+listener = keyboard.Listener(on_press=on_press)
+listener.start()
 
 print("Loading gesture recognizer...")
 # Load the recognizer model
@@ -62,10 +71,9 @@ def on_text(recognizer, audio):
                 except ValueError:
                     pass
 
-    except sr.UnknownValueError:
+    except Exception as e:
         pass 
-    except sr.RequestError as e:
-        print(f"API error: {e}")
+
 
 r   = sr.Recognizer()
 mic = sr.Microphone()
