@@ -58,6 +58,8 @@ class GestureStates:
                 return
             gray_image = cv2.cvtColor(vid, cv2.COLOR_BGR2GRAY)
             faces = self.face_classifier.detectMultiScale(gray_image, 1.1, 5, minSize=(40, 40))
+            PROPORTION_THRESHOLD = 0.05
+            faces = [face for face in faces if (face[2] * face[3]) / (vid.shape[0] * vid.shape[1]) > PROPORTION_THRESHOLD]
             for (x, y, w, h) in faces:
                 cv2.rectangle(vid, (x, y), (x + w, y + h), (0, 255, 0), 4)
 
